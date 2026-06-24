@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CodeCraftHub: Your Learning Management Platform</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f3f4f6; color: #1f2937; }
+
+    header {
+      background: #8B5CF6; color: white;
+      padding: 1.2rem 2rem;
+      display: flex; align-items: center; gap: 1rem;
+    }
+    header h1 { font-size: 1.4rem; }
+
+    .container { max-width: 960px; margin: 2rem auto; padding: 0 1rem; }
+
+    .card {
+      background: white; border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      padding: 1.5rem; margin-bottom: 2rem;
+    }
+    .card h2 { font-size: 1.1rem; margin-bottom: 1rem; color: #8B5CF6; }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+    .form-grid .full { grid-column: 1 / -1; }
+
+    label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.3rem; color: #374151; }
+    input, textarea, select {
+      width: 100%; padding: 0.55rem 0.75rem;
+      border: 1px solid #d1d5db; border-radius: 6px;
+      font-size: 0.95rem; font-family: inherit;
+    }
+    input:focus, textarea:focus, select:focus {
+      outline: none; border-color: #8B5CF6;
+      box-shadow: 0 0 0 3px rgba(139,92,246,0.15);
+    }
+    textarea { resize: vertical; min-height: 70px; }
+
+    .btn {
+      padding: 0.55rem 1.2rem; border: none; border-radius: 6px;
+      font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: opacity .15s;
+    }
+    .btn:hover { opacity: 0.88; }
+    .btn-primary { background: #8B5CF6; color: white; }
+    .btn-success { background: #F59E0B; color: white; }
+    .btn-danger  { background: #EF4444; color: white; }
+    .btn-sm { padding: 0.35rem 0.75rem; font-size: 0.8rem; }
+    .btn-cancel { background: #e5e7eb; color: #374151; }
+
+    .form-actions { margin-top: 1rem; display: flex; gap: 0.5rem; }
+
+    #message {
+      padding: 0.75rem 1rem; border-radius: 6px;
+      margin-bottom: 1rem; font-weight: 600; display: none;
+    }
+    #message.success { background: #d1fae5; color: #065f46; }
+    #message.error   { background: #fee2e2; color: #991b1b; }
+
+    .spinner {
+      display: none; text-align: center; padding: 2rem;
+      color: #8B5CF6; font-weight: 600;
+    }
+    .spinner.active { display: block; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th {
+      background: #f9fafb; text-align: left;
+      padding: 0.65rem 0.85rem; border-bottom: 2px solid #e5e7eb;
+      font-size: 0.8rem; text-transform: uppercase; color: #6b7280;
+    }
+    td { padding: 0.75rem 0.85rem; border-bottom: 1px solid #f3f4f6; vertical-align: top; }
+    tr:hover td { background: #faf5ff; }
+
+    .badge {
+      display: inline-block; padding: 0.2rem 0.6rem;
+      border-radius: 999px; font-size: 0.75rem; font-weight: 600;
+    }
+    .badge-not-started { background: #e5e7eb; color: #374151; }
+    .badge-in-progress { background: #dbeafe; color: #1d4ed8; }
+    .badge-completed   { background: #d1fae5; color: #065f46; }
+
+    .actions { display: flex; gap: 0.4rem; }
+
+    /* modal */
+    .modal-backdrop {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45); z-index: 100;
+      align-items: center; justify-content: center;
+    }
+    .modal-backdrop.active { display: flex; }
+    .modal {
+      background: white; border-radius: 10px; padding: 1.5rem;
+      width: 100%; max-width: 520px; box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    }
+    .modal h2 { color: #8B5CF6; margin-bottom: 1rem; }
+
+    @media (max-width: 600px) {
+      .form-grid { grid-template-columns: 1fr; }
+      table { font-size: 0.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+    <circle cx="16" cy="16" r="16" fill="white" fill-opacity="0.2"/>
+    <path d="M8 20l8-12 8 12H8z" fill="white"/>
+  </svg>
+  <h1>CodeCraftHub: Your Learning Management Platform</h1>
+</header>
+
+<div class="container">
+
+  <div id="message"></div>
+
+  <!-- Add Course -->
+  <div class="card">
+    <h2>+ Add New Course</h2>
+    <form id="addForm">
+      <div class="form-grid">
+        <div>
+          <label>Course Name *</label>
+          <input type="text" id="add-name" placeholder="e.g. Python Basics" required />
+        </div>
+        <div>
+          <label>Target Date *</label>
+          <input type="date" id="add-date" required />
+        </div>
+        <div class="full">
+          <label>Description *</label>
+          <textarea id="add-desc" placeholder="What will you learn?" required></textarea>
+        </div>
+        <div>
+          <label>Status *</label>
+          <select id="add-status">
+            <option value="Not Started">Not Started</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Completed">Completed</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Add Course</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Course List -->
+  <div class="card">
+    <h2>Your Courses</h2>
+    <div class="spinner" id="spinner">Loading courses...</div>
+    <div id="tableWrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Target Date</th>
+            <th>Status</th>
+            <th>Added</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="courseTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-backdrop" id="editModal">
+  <div class="modal">
+    <h2>Edit Course</h2>
+    <form id="editForm">
+      <input type="hidden" id="edit-id" />
+      <div class="form-grid">
+        <div>
+          <label>Course Name *</label>
+          <input type="text" id="edit-name" required />
+        </div>
+        <div>
+          <label>Target Date *</label>
+          <input type="date" id="edit-date" required />
+        </div>
+        <div class="full">
+          <label>Description *</label>
+          <textarea id="edit-desc" required></textarea>
+        </div>
+        <div>
+          <label>Status *</label>
+          <select id="edit-status">
+            <option value="Not Started">Not Started</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Completed">Completed</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-success">Save Changes</button>
+        <button type="button" class="btn btn-cancel" onclick="closeModal()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  const API = 'http://localhost:5050/api/courses';
+
+  function showMessage(text, type) {
+    const el = document.getElementById('message');
+    el.textContent = text;
+    el.className = type;
+    el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, 4000);
+  }
+
+  function badgeClass(status) {
+    if (status === 'In Progress') return 'badge-in-progress';
+    if (status === 'Completed') return 'badge-completed';
+    return 'badge-not-started';
+  }
+
+  async function loadCourses() {
+    const spinner = document.getElementById('spinner');
+    const wrap = document.getElementById('tableWrap');
+    spinner.classList.add('active');
+    wrap.style.display = 'none';
+    try {
+      const res = await fetch(API);
+      const data = await res.json();
+      renderTable(data.courses || []);
+    } catch (e) {
+      showMessage('Failed to load courses. Is the backend running?', 'error');
+    } finally {
+      spinner.classList.remove('active');
+      wrap.style.display = 'block';
+    }
+  }
+
+  function renderTable(courses) {
+    const tbody = document.getElementById('courseTable');
+    if (courses.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:2rem">No courses yet. Add one above!</td></tr>';
+      return;
+    }
+    tbody.innerHTML = courses.map(c => `
+      <tr>
+        <td><strong>${esc(c.name)}</strong></td>
+        <td>${esc(c.description)}</td>
+        <td>${esc(c.target_date)}</td>
+        <td><span class="badge ${badgeClass(c.status)}">${esc(c.status)}</span></td>
+        <td style="color:#9ca3af;font-size:.8rem">${esc(c.created_at || '')}</td>
+        <td class="actions">
+          <button class="btn btn-success btn-sm" onclick="openEdit(${c.id})">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteCourse(${c.id})">Delete</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function esc(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // Add course
+  document.getElementById('addForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const body = {
+      name: document.getElementById('add-name').value.trim(),
+      description: document.getElementById('add-desc').value.trim(),
+      target_date: document.getElementById('add-date').value,
+      status: document.getElementById('add-status').value
+    };
+    try {
+      const res = await fetch(API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showMessage('Course added successfully!', 'success');
+        e.target.reset();
+        loadCourses();
+      } else {
+        showMessage(data.error || 'Failed to add course.', 'error');
+      }
+    } catch {
+      showMessage('Network error. Is the backend running?', 'error');
+    }
+  });
+
+  // Delete course
+  async function deleteCourse(id) {
+    if (!confirm('Delete this course?')) return;
+    try {
+      const res = await fetch(`${API}/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        showMessage('Course deleted.', 'success');
+        loadCourses();
+      } else {
+        showMessage('Failed to delete course.', 'error');
+      }
+    } catch {
+      showMessage('Network error.', 'error');
+    }
+  }
+
+  // Edit modal
+  let _editData = {};
+  async function openEdit(id) {
+    try {
+      const res = await fetch(`${API}/${id}`);
+      const data = await res.json();
+      const c = data.course;
+      document.getElementById('edit-id').value = c.id;
+      document.getElementById('edit-name').value = c.name;
+      document.getElementById('edit-desc').value = c.description;
+      document.getElementById('edit-date').value = c.target_date;
+      document.getElementById('edit-status').value = c.status;
+      document.getElementById('editModal').classList.add('active');
+    } catch {
+      showMessage('Could not load course for editing.', 'error');
+    }
+  }
+
+  function closeModal() {
+    document.getElementById('editModal').classList.remove('active');
+  }
+
+  document.getElementById('editForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const id = document.getElementById('edit-id').value;
+    const body = {
+      name: document.getElementById('edit-name').value.trim(),
+      description: document.getElementById('edit-desc').value.trim(),
+      target_date: document.getElementById('edit-date').value,
+      status: document.getElementById('edit-status').value
+    };
+    try {
+      const res = await fetch(`${API}/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showMessage('Course updated successfully!', 'success');
+        closeModal();
+        loadCourses();
+      } else {
+        showMessage(data.error || 'Failed to update course.', 'error');
+      }
+    } catch {
+      showMessage('Network error.', 'error');
+    }
+  });
+
+  // Close modal on backdrop click
+  document.getElementById('editModal').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeModal();
+  });
+
+  // Initial load
+  loadCourses();
+</script>
+</body>
+</html>
